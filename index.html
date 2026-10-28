@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2028 고입 내신 계산기</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1d2330; --sub:#5b6475; --line:#e2e5ea;
+  --accent:#2f6fde; --accent-soft:#e8f0fd; --good:#1f8a5b; --warn:#b5651d; --chip:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14171c; --card:#1c2027; --ink:#e7eaf0; --sub:#a0a8b8; --line:#2d333d;
+    --accent:#6b9cf0; --accent-soft:#223352; --good:#4cc08a; --warn:#e3a05a; --chip:#262b34;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.5rem;margin:0 0 4px}
+.lead{color:var(--sub);margin:0 0 16px;font-size:.95rem}
+.notice{background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:.88rem;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+.card h2{font-size:1.08rem;margin:0 0 10px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:7px 12px;border-radius:999px;cursor:pointer;font-size:.9rem}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab .s{font-size:.78rem;opacity:.85;margin-left:4px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--sub);font-weight:600;font-size:.82rem}
+input[type=text],input[type=number],select{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:.92rem}
+input[type=number]{max-width:90px}
+td.num{width:100px} td.sel{width:100px} td.del{width:36px;text-align:center}
+.x{border:none;background:none;color:var(--sub);cursor:pointer;font-size:1.1rem}
+.btn{border:1px solid var(--line);background:var(--chip);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:.88rem}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.semres{margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:10px;font-size:.9rem}
+.semres b{font-size:1.05rem}
+.sub{color:var(--sub);font-size:.84rem}
+.label{font-size:.9rem;font-weight:600;margin:10px 0 4px}
+.f3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:560px){.f3{grid-template-columns:1fr}}
+.f3 .box{background:var(--chip);border-radius:10px;padding:10px}
+.f3 input{max-width:none}
+.sum{position:sticky;top:12px}
+.total{font-size:2.3rem;font-weight:800;color:var(--accent);margin:2px 0}
+.bar{height:8px;background:var(--chip);border-radius:6px;overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed var(--line);font-size:.92rem}
+.li span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
+.pill{display:inline-block;font-size:.75rem;padding:1px 8px;border-radius:999px;background:var(--chip);color:var(--sub);margin-left:6px}
+.est{color:var(--warn)}
+details{font-size:.9rem} summary{cursor:pointer;font-weight:600}
+.switch{display:flex;gap:6px;align-items:center;font-size:.9rem;margin:8px 0}
+.dock{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;z-index:10;box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+.dock b{font-size:1.3rem;color:var(--accent)}
+@media (max-width:860px){.dock{display:flex}.wrap{padding-bottom:90px}.sum{position:static}}
+.flash{animation:fl .8s ease}
+@keyframes fl{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.toast{margin-top:8px;color:var(--good);font-weight:600;font-size:.9rem}
+@media print{.tabs,.btn,.x,.dock{display:none!important}.grid{grid-template-columns:1fr}.sum{position:static}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2028학년도 경기도 고입 내신 계산기</h1>
+  <p class="lead">현재 중학교 2학년(2028년 3월 고등학교 입학 예정) 학생용 · 일반고 기준 200점 만점</p>
+  <div class="notice" style="background:var(--chip)">
+    <b>사용 방법</b> — ① 학기 탭을 눌러 과목별 원점수와 성취도를 입력하고 <b>[반영하기]</b>를 누르세요.
+    ② 출결과 학교활동도 입력하세요. ③ 입력한 값은 <b>바로 자동으로 총점에 반영</b>되고, [결과 보기]를 누르면 내 총점으로 이동해요.
+  </div>
+  <div class="notice">
+    경기도교육청 「2028학년도 경기도 고등학교 입학 내신성적 반영지침 예고(안)」(2026.3.)을 바탕으로 만든 <b>자가 확인용</b> 계산기입니다.
+    실제 내신은 학교가 경기도 고입 포털(SATP)로 산출하며, 지침이 확정되면 바뀔 수 있습니다.
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <h2>① 교과 성적 입력</h2>
+        <div class="tabs" id="tabs"></div>
+        <div id="semPane"></div>
+      </div>
+
+      <div class="card">
+        <h2>② 출결 상황 <span class="pill">40점</span></h2>
+        <p class="sub">학년별 <b>미인정</b> 결석만 감점됩니다. 질병·출석인정 결석은 감점되지 않아요. 미인정 지각·조퇴·결과는 합쳐서 3회 = 결석 1일입니다.</p>
+        <div class="f3" id="attend"></div>
+      </div>
+
+      <div class="card">
+        <h2>③ 학교활동 실적 <span class="pill">10점</span></h2>
+        <p class="sub">기본 8점 + 가산점(최대 2점). 교내상은 한 학기에 1개만 0.5점, 학생회·학급 회장/부회장은 한 달 0.1점(월 15일 이상 활동 시 1개월, 3학년 10월 말까지).</p>
+        <div class="f3">
+          <div class="box"><div class="label">교내상을 받은 학기 수</div><input type="number" id="awards" min="0" max="6" value="0"><div class="sub">0~6학기</div></div>
+          <div class="box"><div class="label">임원 활동 개월 수</div><input type="number" id="months" min="0" max="40" value="0"><div class="sub">겹치는 기간은 한 번만</div></div>
+          <div class="box"><div class="label">학교활동 점수</div><div id="actScore" style="font-size:1.4rem;font-weight:700">8.000</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <details>
+          <summary>계산 방법 자세히 보기</summary>
+          <p><b>일반교과 학기 점수</b> = 기본점수 + (성취도 평균 × 배율) + (원점수 평균 × 계수)<br>
+          성취도 환산: A=5, B=4, C=3, D=2, E=1</p>
+          <table>
+            <tr><th>학기</th><th>기본점수</th><th>성취도 배율</th><th>원점수 계수</th><th>만점</th></tr>
+            <tr><td>1학년 2학기</td><td>4</td><td>×0.8</td><td>×0.04</td><td>12</td></tr>
+            <tr><td>2학년 1·2학기</td><td>8</td><td>×1.6</td><td>×0.08</td><td>각 24</td></tr>
+            <tr><td>3학년 1·2학기</td><td>10</td><td>×2</td><td>×0.1</td><td>각 30</td></tr>
+          </table>
+          <p>예) 2학년 1학기 성취도 A·B·C·B·A, 원점수 90·85·72·83·93 → 8 + 4.2×1.6 + 84.6×0.08 = <b>21.488</b></p>
+          <p><b>체육·예술(체육·음악·미술)</b> = 10 + 20 × (3×A개수 + 2×B개수 + 1×C개수) ÷ (3 × 이수 과목 수) <br>
+          1학년 2학기~3학년 2학기의 모든 체육·음악·미술 과목을 합쳐 한 번에 계산합니다(30점 만점). <span class="est">※ 이 식은 공개된 계산 사례를 바탕으로 한 것이니 지침 원문 표와 꼭 대조하세요.</span></p>
+          <p><b>출결</b> (미인정 결석일수): 0일 100% · 1일 90% · 2일 80% · 3일 70% · 4일 60% · 5일 50% · 6일 이상 40%<br>
+          1·2학년 각 13점, 3학년 14점 만점</p>
+          <p>1학년 1학기(자유학기)는 반영하지 않으며, 2028학년도부터 봉사활동은 내신에 반영하지 않습니다. 학기 점수는 소수 넷째 자리에서 반올림합니다.</p>
+        </details>
+      </div>
+    </div>
+
+    <div>
+      <div class="card sum" id="summary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="dock"><div>예상 총점 <b id="dockTotal">0.000</b> <span class="sub">/ 200</span></div><button class="btn primary" onclick="goSummary()">결과 보기 ↓</button></div>
+<script>
+const SEMS = [
+  {id:'1-2', name:'1학년 2학기', base:4,  m:0.8, k:0.04, max:12, g:1},
+  {id:'2-1', name:'2학년 1학기', base:8,  m:1.6, k:0.08, max:24, g:2},
+  {id:'2-2', name:'2학년 2학기', base:8,  m:1.6, k:0.08, max:24, g:2},
+  {id:'3-1', name:'3학년 1학기', base:10, m:2,   k:0.1,  max:30, g:3},
+  {id:'3-2', name:'3학년 2학기', base:10, m:2,   k:0.1,  max:30, g:3},
+];
+const GEN_DEFAULT = ['국어','사회','역사','도덕','수학','과학','기술·가정','정보','영어'];
+const ART_DEFAULT = ['체육','음악','미술'];
+const ACH = {A:5,B:4,C:3,D:2,E:1};
+
+const state = {cur:'1-2', sems:{}, use3:false,
+  att:{1:{abs:0,late:0},2:{abs:0,late:0},3:{abs:0,late:0}}};
+SEMS.forEach(s=>{
+  state.sems[s.id] = {
+    gen: GEN_DEFAULT.map(n=>({name:n, raw:'', ach:''})),
+    art: ART_DEFAULT.map(n=>({name:n, ach:''}))
+  };
+});
+
+const r3 = x => Math.round(x*1000)/1000;
+const f3 = x => (Math.round(x*1000)/1000).toFixed(3);
+const autoAch = raw => raw>=90?'A':raw>=80?'B':raw>=70?'C':raw>=60?'D':'E';
+
+function semGen(s){
+  const rows = state.sems[s.id].gen.filter(r=>r.raw!=='' && !isNaN(+r.raw));
+  if(!rows.length) return null;
+  const n = rows.length;
+  const achAvg = rows.reduce((a,r)=>a+ACH[r.ach||autoAch(+r.raw)],0)/n;
+  const rawAvg = rows.reduce((a,r)=>a+(+r.raw),0)/n;
+  return {n, achAvg, rawAvg, score:r3(s.base + achAvg*s.m + rawAvg*s.k)};
+}
+function semEntered(s){ return semGen(s)!==null || state.sems[s.id].art.some(r=>r.ach); }
+
+function artScore(ids){
+  let a=0,b=0,c=0;
+  ids.forEach(id=>state.sems[id].art.forEach(r=>{ if(r.ach==='A')a++; else if(r.ach==='B')b++; else if(r.ach==='C')c++; }));
+  const n=a+b+c;
+  if(!n) return {n:0,a,b,c,score:null};
+  return {n,a,b,c,score:r3(10 + 20*(3*a+2*b+c)/(3*n))};
+}
+function absDays(g){
+  const t=state.att[g];
+  return (+t.abs||0) + Math.floor((+t.late||0)/3);
+}
+function attScore(g){
+  const d=absDays(g), full = g===3?14:13;
+  const pct=[1,.9,.8,.7,.6,.5,.4][Math.min(d,6)];
+  return r3(full*pct);
+}
+function actScore(){
+  const aw=Math.max(0,Math.min(6,+document.getElementById('awards').value||0));
+  const mo=Math.max(0,+document.getElementById('months').value||0);
+  return r3(8 + Math.min(2, aw*0.5 + mo*0.1));
+}
+
+/* ---------- 화면 ---------- */
+function renderTabs(){
+  const el=document.getElementById('tabs');
+  el.innerHTML = SEMS.map(s=>{
+    const g=semGen(s);
+    const tag = g? `<span class="s">${f3(g.score)}</span>` : '';
+    const opt = s.g===3? ' <span class="s">(예상)</span>':'';
+    return `<button class="tab ${state.cur===s.id?'on':''}" data-id="${s.id}">${s.name}${opt}${tag}</button>`;
+  }).join('');
+  el.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{state.cur=b.dataset.id;renderSem();renderTabs();});
+}
+
+function renderSem(){
+  const s=SEMS.find(x=>x.id===state.cur), d=state.sems[s.id];
+  const pane=document.getElementById('semPane');
+  const note3 = s.g===3? `<div class="notice">3학년 성적은 아직 없으니 <b>목표 점수</b>를 넣어 보세요. 비워 두면 오른쪽에서 2학년 성적이 그대로 유지된다고 가정해 예상 총점을 보여 줍니다.</div>`:'';
+  pane.innerHTML = `${note3}
+    <div class="label">일반교과 <span class="sub">— 원점수를 넣으면 성취도는 90/80/70/60점 기준으로 자동 선택돼요. 성적표와 다르면 직접 고르세요.</span></div>
+    <table><thead><tr><th>과목</th><th>원점수</th><th>성취도</th><th></th></tr></thead><tbody id="genBody"></tbody></table>
+    <div class="row"><button class="btn" id="addGen">+ 과목 추가</button></div>
+    <div class="label" style="margin-top:16px">체육·예술 <span class="sub">— 성취도 A/B/C만 입력 (원점수 없음)</span></div>
+    <table><thead><tr><th>과목</th><th>성취도</th><th></th></tr></thead><tbody id="artBody"></tbody></table>
+    <div class="row"><button class="btn" id="addArt">+ 과목 추가</button><button class="btn" id="clearSem">이 학기 지우기</button></div>
+    <div class="semres" id="semRes"></div>
+    <div class="row">
+      <button class="btn primary" id="applySem">✔ ${s.name} 반영하기${nextSem(s)?' → '+nextSem(s).name:''}</button>
+      <button class="btn" onclick="goSummary()">결과 보기</button>
+    </div>
+    <div class="toast" id="toast"></div>`;
+  document.getElementById('applySem').onclick=()=>{
+    update();
+    const g=semGen(s), n=nextSem(s);
+    const msg = g ? `${s.name} 일반교과 ${f3(g.score)}점이 총점에 반영되었어요.` : `${s.name} 원점수가 비어 있어요. 원점수를 입력해야 반영돼요.`;
+    if(g && n){ state.cur=n.id; renderSem(); renderTabs(); }
+    else if(g && !n){ goSummary(); }
+    const t=document.getElementById('toast'); if(t) t.textContent=msg;
+    flash();
+  };
+
+  const gb=document.getElementById('genBody');
+  d.gen.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="text" value="${r.name}"></td>
+      <td class="num"><input type="number" min="0" max="100" step="0.1" value="${r.raw}" placeholder="0~100"></td>
+      <td class="sel"><select><option value="">${r.raw!==''?'자동('+autoAch(+r.raw)+')':'-'}</option>${'ABCDE'.split('').map(x=>`<option ${r.ach===x?'selected':''}>${x}</option>`).join('')}</select></td>
+      <td class="del"><button class="x" title="삭제">×</button></td>`;
+    const [nm,raw]=tr.querySelectorAll('input'), sel=tr.querySelector('select');
+    nm.oninput=()=>{r.name=nm.value;};
+    raw.oninput=()=>{
+      let v=raw.value; if(v!==''){v=Math.max(0,Math.min(100,+v));}
+      r.raw=v===''?'':v; sel.options[0].text = r.raw!==''?'자동('+autoAch(+r.raw)+')':'-'; update();
+    };
+    sel.onchange=()=>{r.ach=sel.value;update();};
+    tr.querySelector('.x').onclick=()=>{d.gen.splice(i,1);renderSem();update();};
+    gb.appendChild(tr);
+  });
+  const ab=document.getElementById('artBody');
+  d.art.forEach((r,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input type="text" value="${r.name}"></td>
+      <td class="sel"><select><option value="">미이수</option>${'ABC'.split('').map(x=>`<option ${r.ach===x?'selected':''}>${x}</option>`).join('')}</select></td>
+      <td class="del"><button class="x" title="삭제">×</button></td>`;
+    tr.querySelector('input').oninput=e=>{r.name=e.target.value;};
+    tr.querySelector('select').onchange=e=>{r.ach=e.target.value;update();};
+    tr.querySelector('.x').onclick=()=>{d.art.splice(i,1);renderSem();update();};
+    ab.appendChild(tr);
+  });
+  document.getElementById('addGen').onclick=()=>{d.gen.push({name:'',raw:'',ach:''});renderSem();};
+  document.getElementById('addArt').onclick=()=>{d.art.push({name:'',ach:''});renderSem();};
+  document.getElementById('clearSem').onclick=()=>{
+    d.gen.forEach(r=>{r.raw='';r.ach='';}); d.art.forEach(r=>r.ach=''); renderSem(); update();
+  };
+  renderSemRes();
+}
+
+function renderSemRes(){
+  const s=SEMS.find(x=>x.id===state.cur), g=semGen(s);
+  const el=document.getElementById('semRes'); if(!el) return;
+  if(!g){ el.innerHTML=`<span class="sub">원점수를 입력하면 이 학기 일반교과 점수가 계산됩니다. (만점 ${s.max}점)</span>`; return; }
+  el.innerHTML=`${s.name} 일반교과 <b>${f3(g.score)}</b> / ${s.max}점
+   <div class="sub">${g.n}과목 · 기본 ${s.base} + 성취도 평균 ${g.achAvg.toFixed(3)}×${s.m} (${f3(g.achAvg*s.m)}) + 원점수 평균 ${g.rawAvg.toFixed(3)}×${s.k} (${f3(g.rawAvg*s.k)})</div>`;
+}
+
+function renderAttend(){
+  const el=document.getElementById('attend');
+  el.innerHTML=[1,2,3].map(g=>`
+    <div class="box">
+      <div class="label">${g}학년 ${g===3?'<span class="sub">(예상)</span>':''}</div>
+      <div class="sub">미인정 결석(일)</div><input type="number" min="0" data-g="${g}" data-k="abs" value="${state.att[g].abs}">
+      <div class="sub" style="margin-top:6px">미인정 지각+조퇴+결과(회)</div><input type="number" min="0" data-g="${g}" data-k="late" value="${state.att[g].late}">
+      <div style="margin-top:8px">→ 결석 <b id="ad${g}">0</b>일 · <b id="as${g}">0</b> / ${g===3?14:13}점</div>
+    </div>`).join('');
+  el.querySelectorAll('input').forEach(i=>i.oninput=()=>{state.att[i.dataset.g][i.dataset.k]=Math.max(0,+i.value||0);update();});
+}
+
+function update(){
+  renderTabs(); renderSemRes();
+  [1,2,3].forEach(g=>{document.getElementById('ad'+g).textContent=absDays(g);document.getElementById('as'+g).textContent=f3(attScore(g));});
+  const act=actScore(); document.getElementById('actScore').textContent=f3(act);
+
+  // 1·2학년 확정분
+  const done = SEMS.filter(s=>s.g<3);
+  let genDone=0, genDoneMax=0, missing=[];
+  done.forEach(s=>{const g=semGen(s); genDoneMax+=s.max; if(g) genDone+=g.score; else missing.push(s.name);});
+
+  // 3학년: 입력값 또는 2학년 성적 유지 가정
+  const g2 = done.filter(s=>s.g===2).map(semGen).filter(Boolean);
+  const ratio2 = g2.length ? g2.reduce((a,g)=>a+g.score,0)/(24*g2.length) : null;
+  let gen3=0, est3=false;
+  SEMS.filter(s=>s.g===3).forEach(s=>{
+    const g=semGen(s);
+    if(g) gen3+=g.score; else if(ratio2!==null){ gen3+=r3(s.max*ratio2); est3=true; }
+  });
+
+  const artIdsDone = done.map(s=>s.id);
+  const artAll = artScore(SEMS.map(s=>s.id));
+  const artD = artScore(artIdsDone);
+  // 3학년 예체능 미입력이면 1·2학년 비율 유지 가정 → 같은 점수
+  const art3Entered = SEMS.filter(s=>s.g===3).some(s=>state.sems[s.id].art.some(r=>r.ach));
+  let artTotal = art3Entered ? artAll.score : artD.score;
+  const artNone = artTotal===null;
+  if(artNone) artTotal = 16.667; // 미이수 시 처리(가정)
+
+  const att12 = attScore(1)+attScore(2), att3=attScore(3);
+  const sum12 = r3(genDone + artTotal + att12 + act);
+  const total = r3(genDone + gen3 + artTotal + att12 + att3 + act);
+  const totalPct = Math.min(100, total/200*100);
+
+  const sumEl=document.getElementById('summary');
+  sumEl.innerHTML = `
+    <h2>내 내신 총점 (예상)</h2>
+    <div class="total">${f3(total)}<span style="font-size:1rem;color:var(--sub);font-weight:600"> / 200</span></div>
+    <div class="bar"><i style="width:${totalPct}%"></i></div>
+    <div class="sub">${est3?'<span class="est">3학년 성적을 비워 둔 학기는 2학년 평균 성적이 유지된다고 가정했어요.</span>':''}
+    ${(!est3 && SEMS.filter(s=>s.g===3).some(s=>!semGen(s)))?'<span class="est">2학년 성적을 넣으면 3학년 예상 점수도 함께 계산돼요.</span>':''}</div>
+
+    <div class="label" style="margin-top:14px">교과 활동 <span class="pill">150점</span></div>
+    ${SEMS.map(s=>{const g=semGen(s);
+      let v = g? f3(g.score) : (s.g===3 && ratio2!==null ? `<span class="est">${f3(s.max*ratio2)}*</span>` : '-');
+      return `<div class="li"><span>${s.name}</span><span>${v} / ${s.max}</span></div>`;}).join('')}
+    <div class="li"><span>체육·예술 ${artNone?'<span class="pill">미입력</span>':`<span class="pill">A${(art3Entered?artAll:artD).a}·B${(art3Entered?artAll:artD).b}·C${(art3Entered?artAll:artD).c}</span>`}</span><span>${artNone?'<span class="est">16.667*</span>':f3(artTotal)} / 30</span></div>
+
+    <div class="label" style="margin-top:12px">출결 <span class="pill">40점</span></div>
+    <div class="li"><span>1학년</span><span>${f3(attScore(1))} / 13</span></div>
+    <div class="li"><span>2학년</span><span>${f3(attScore(2))} / 13</span></div>
+    <div class="li"><span>3학년 (예상)</span><span>${f3(att3)} / 14</span></div>
+
+    <div class="label" style="margin-top:12px">학교활동 <span class="pill">10점</span></div>
+    <div class="li"><span>기본 8 + 가산점</span><span>${f3(act)} / 10</span></div>
+
+    <div class="card" style="margin:14px 0 0;background:var(--chip);border:none">
+      <div class="label" style="margin-top:0">지금까지(1·2학년) 확보한 점수</div>
+      <div style="font-size:1.4rem;font-weight:700">${f3(sum12)} <span class="sub">/ 최대 ${f3(genDoneMax+30+26+10)}</span></div>
+      <div class="sub">일반교과 ${f3(genDone)}/${genDoneMax} · 체육·예술 ${artNone?'-':f3(artTotal)} · 출결 ${f3(att12)}/26 · 학교활동 ${f3(act)}</div>
+      ${missing.length?`<div class="sub est" style="margin-top:4px">아직 입력 안 함: ${missing.join(', ')}</div>`:''}
+    </div>
+    <div class="row"><button class="btn primary" onclick="window.print()">결과 인쇄하기</button><button class="btn" id="resetAll">전체 초기화</button></div>
+    <p class="sub" style="margin-top:10px">* 표시는 가정값입니다. 이 결과는 참고용이며, 정확한 내신은 담임선생님께 확인하세요.</p>`;
+  updateDock(total);
+  document.getElementById('resetAll').onclick=()=>{ location.reload(); };
+}
+
+function nextSem(s){ const i=SEMS.indexOf(s); return SEMS[i+1]||null; }
+function goSummary(){ const el=document.getElementById('summary'); el.scrollIntoView({behavior:'smooth',block:'start'}); flash(); }
+function flash(){ const el=document.getElementById('summary'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+function updateDock(total){ const d=document.getElementById('dockTotal'); if(d) d.textContent=f3(total); }
+['awards','months'].forEach(id=>document.getElementById(id).oninput=update);
+renderAttend(); renderSem(); update();
+</script>
+</body>
+</html>
